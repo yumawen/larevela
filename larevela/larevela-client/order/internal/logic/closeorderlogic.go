@@ -24,7 +24,5 @@ func NewCloseOrderLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CloseO
 }
 
 func (l *CloseOrderLogic) CloseOrder(in *order.CloseOrderReq) (*order.CloseOrderResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &order.CloseOrderResp{}, nil
+	return l.svcCtx.Store.CloseOrder(in)
 }
