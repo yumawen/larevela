@@ -1,0 +1,4 @@
+# Local Go toolchains / caches (never commit)
+.gobin/
+.gocache/
+.gomodcache/
