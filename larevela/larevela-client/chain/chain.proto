@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package chain;
+option go_package="./chain";
+
+message GetTransactionReq {
+  string chainType = 1;
+  string network = 2;
+  int64 chainId = 3;
+  string txId = 4;
+}
+
+message GetTransactionResp {
+  string txId = 1;
+  string fromAccount = 2;
+  string toAccount = 3;
+  string fromTokenAccount = 4;
+  string toTokenAccount = 5;
+  string assetAddress = 6;
+  string amount = 7;
+  int64 blockNumber = 8;
+  int64 slot = 9;
+  string confirmationStatus = 10;
+  bool finalized = 11;
+  bool found = 12;
+}
+
+message GetReceiptReq {
+  string chainType = 1;
+  string network = 2;
+  int64 chainId = 3;
+  string txId = 4;
+}
+
+message GetReceiptResp {
+  string txId = 1;
+  int64 status = 2;
+  int64 blockNumber = 3;
+  int64 slot = 4;
+  int64 gasUsed = 5;
+  string feeAmount = 6;
+  repeated ChainLog logs = 7;
+  string confirmationStatus = 8;
+  bool finalized = 9;
+  bool found = 10;
+}
+
+message ChainLog {
+  string address = 1;
+  repeated string topics = 2;
+  string data = 3;
+  int64 logIndex = 4;
+}
+
+message ParsePaymentReq {
+  string chainType = 1;
+  string network = 2;
+  int64 chainId = 3;
+  string txId = 4;
+  string receiverAccount = 5;
+  string receiverTokenAccount = 6;
+  string assetAddress = 7;
+  string expectedAmount = 8;
+  string referenceId = 9;
+}
+
+message ParsePaymentResp {
+  bool matched = 1;
+  string fromAccount = 2;
+  string toAccount = 3;
+  string fromTokenAccount = 4;
+  string toTokenAccount = 5;
+  string assetAddress = 6;
+  string amountActual = 7;
+  int64 blockNumber = 8;
+  int64 slot = 9;
+  int64 confirmations = 10;
+  string confirmationStatus = 11;
+  bool finalized = 12;
+  string matchReason = 13;
+}
+
+service Chain {
+  rpc GetTransaction(GetTransactionReq) returns(GetTransactionResp);
+  rpc GetReceipt(GetReceiptReq) returns(GetReceiptResp);
+  rpc ParsePayment(ParsePaymentReq) returns(ParsePaymentResp);
+}

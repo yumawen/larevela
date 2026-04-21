@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package ledger;
+option go_package="./ledger";
+
+message CreateEntryReq {
+  string entryNo = 1;
+  string paymentNo = 2;
+  string orderNo = 3;
+  int64 userId = 4;
+  string chainType = 5;
+  string network = 6;
+  int64 chainId = 7;
+  string entryType = 8;
+  string assetSymbol = 9;
+  string assetAddress = 10;
+  string amount = 11;
+  string direction = 12;
+  string remark = 13;
+}
+
+message CreateEntryResp {
+  string entryNo = 1;
+  string status = 2;
+}
+
+message GetEntryReq {
+  string entryNo = 1;
+}
+
+message GetEntryResp {
+  string entryNo = 1;
+  string paymentNo = 2;
+  string orderNo = 3;
+  int64 userId = 4;
+  string chainType = 5;
+  string network = 6;
+  int64 chainId = 7;
+  string entryType = 8;
+  string assetSymbol = 9;
+  string assetAddress = 10;
+  string amount = 11;
+  string direction = 12;
+  string status = 13;
+  string remark = 14;
+}
+
+service Ledger {
+  rpc CreateEntry(CreateEntryReq) returns(CreateEntryResp);
+  rpc GetEntry(GetEntryReq) returns(GetEntryResp);
+}

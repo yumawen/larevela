@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package chain;
+option go_package = "./chain";
+
+message GetTransactionReq {
+  int64 chainId = 1;
+  string txHash = 2;
+}
+
+message GetTransactionResp {
+  string txHash = 1;
+  string fromAddress = 2;
+  string toAddress = 3;
+  string value = 4;
+  int64 blockNumber = 5;
+  bool found = 6;
+}
+
+message GetReceiptReq {
+  int64 chainId = 1;
+  string txHash = 2;
+}
+
+message GetReceiptResp {
+  string txHash = 1;
+  int64 status = 2;
+  int64 blockNumber = 3;
+  int64 gasUsed = 4;
+  repeated ChainLog logs = 5;
+  bool found = 6;
+}
+
+message ChainLog {
+  string address = 1;
+  repeated string topics = 2;
+  string data = 3;
+  int64 logIndex = 4;
+}
+
+message ParsePaymentReq {
+  int64 chainId = 1;
+  string txHash = 2;
+  string receiverAddress = 3;
+  string tokenAddress = 4;
+  string expectedAmount = 5;
+}
+
+message ParsePaymentResp {
+  bool matched = 1;
+  string fromAddress = 2;
+  string toAddress = 3;
+  string tokenAddress = 4;
+  string amountActual = 5;
+  int64 blockNumber = 6;
+  int64 confirmations = 7;
+  string matchReason = 8;
+}
+
+service Chain {
+  rpc GetTransaction(GetTransactionReq) returns (GetTransactionResp);
+  rpc GetReceipt(GetReceiptReq) returns (GetReceiptResp);
+  rpc ParsePayment(ParsePaymentReq) returns (ParsePaymentResp);
+}

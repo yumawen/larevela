@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package payment;
+option go_package = "./payment";
+
+message CreatePaymentIntentReq {
+  string orderNo = 1;
+  string chainType = 2;
+  string network = 3;
+  int64 chainId = 4;
+  string assetSymbol = 5;
+  string assetAddress = 6;
+  string payerAccount = 7;
+  string payerTokenAccount = 8;
+  string referenceId = 9;
+}
+
+message CreatePaymentIntentResp {
+  string paymentNo = 1;
+  string orderNo = 2;
+  string chainType = 3;
+  string network = 4;
+  int64 chainId = 5;
+  string payMode = 6;
+  string receiverAccount = 7;
+  string receiverTokenAccount = 8;
+  string assetAddress = 9;
+  string assetSymbol = 10;
+  string amountExpected = 11;
+  int64 decimals = 12;
+  string referenceId = 13;
+  string contractAddress = 14;
+  string method = 15;
+  string calldata = 16;
+  string value = 17;
+  string serializedMessage = 18;
+  int64 quoteExpiredAt = 19;
+  string status = 20;
+}
+
+message SubmitTxReq {
+  string paymentNo = 1;
+  string txId = 2;
+  string fromAccount = 3;
+  string fromTokenAccount = 4;
+}
+
+message SubmitTxResp {
+  string paymentNo = 1;
+  string txId = 2;
+  string confirmationStatus = 3;
+  string status = 4;
+}
+
+message ConfirmPaymentReq {
+  string paymentNo = 1;
+}
+
+message ConfirmPaymentResp {
+  string paymentNo = 1;
+  string txId = 2;
+  int64 confirmations = 3;
+  string confirmationStatus = 4;
+  string amountActual = 5;
+  string status = 6;
+  string failureReason = 7;
+}
+
+message GetPaymentReq {
+  string paymentNo = 1;
+}
+
+message GetPaymentResp {
+  string paymentNo = 1;
+  string orderNo = 2;
+  string txId = 3;
+  string chainType = 4;
+  string network = 5;
+  int64 chainId = 6;
+  string payerAccount = 7;
+  string payerTokenAccount = 8;
+  string receiverAccount = 9;
+  string receiverTokenAccount = 10;
+  string assetAddress = 11;
+  string assetSymbol = 12;
+  string amountExpected = 13;
+  string amountActual = 14;
+  int64 confirmations = 15;
+  string confirmationStatus = 16;
+  string status = 17;
+  string failureReason = 18;
+}
+
+service Payment {
+  rpc CreatePaymentIntent(CreatePaymentIntentReq) returns (CreatePaymentIntentResp);
+  rpc SubmitTx(SubmitTxReq) returns (SubmitTxResp);
+  rpc ConfirmPayment(ConfirmPaymentReq) returns (ConfirmPaymentResp);
+  rpc GetPayment(GetPaymentReq) returns (GetPaymentResp);
+}

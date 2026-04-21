@@ -1,0 +1,91 @@
+syntax = "v1"
+
+info (
+  title:   "Larevela Trade API"
+  desc:    "Web3 wallet payment gateway"
+  author:  "GPT"
+  version: "1.0"
+)
+
+type CreateOrderReq {
+  BizType      string `json:"bizType"`
+  BizId        string `json:"bizId"`
+  UserId       int64  `json:"userId"`
+  Currency     string `json:"currency"`    // USD/CNY
+  Amount       string `json:"amount"`      // fiat amount as decimal string
+}
+
+type CreateOrderResp {
+  OrderNo      string `json:"orderNo"`
+  Status       string `json:"status"`
+  ExpiredAt    int64  `json:"expiredAt"`
+}
+
+type CreatePaymentIntentReq {
+  OrderNo        string `json:"orderNo"`
+  ChainId        int64  `json:"chainId"`
+  AssetSymbol    string `json:"assetSymbol"`    // ETH / USDT
+  TokenAddress   string `json:"tokenAddress"`   // empty for native coin
+  PayerAddress   string `json:"payerAddress"`
+}
+
+type CreatePaymentIntentResp {
+  PaymentNo        string `json:"paymentNo"`
+  OrderNo          string `json:"orderNo"`
+  ChainId          int64  `json:"chainId"`
+  PayMode          string `json:"payMode"`        // transfer | contract_call
+  ReceiverAddress  string `json:"receiverAddress"`
+  TokenAddress     string `json:"tokenAddress"`
+  AssetSymbol      string `json:"assetSymbol"`
+  AmountExpected   string `json:"amountExpected"`
+  Decimals         int64  `json:"decimals"`
+  ContractAddress  string `json:"contractAddress,optional"`
+  Method           string `json:"method,optional"`
+  Calldata         string `json:"calldata,optional"`
+  Value            string `json:"value,optional"`
+  QuoteExpiredAt   int64  `json:"quoteExpiredAt"`
+  Status           string `json:"status"`
+}
+
+type SubmitTxReq {
+  PaymentNo      string `json:"paymentNo"`
+  TxHash         string `json:"txHash"`
+  FromAddress    string `json:"fromAddress"`
+}
+
+type SubmitTxResp {
+  PaymentNo      string `json:"paymentNo"`
+  TxHash         string `json:"txHash"`
+  Status         string `json:"status"`
+}
+
+type QueryPaymentResp {
+  PaymentNo        string `json:"paymentNo"`
+  OrderNo          string `json:"orderNo"`
+  TxHash           string `json:"txHash"`
+  ChainId          int64  `json:"chainId"`
+  AssetSymbol      string `json:"assetSymbol"`
+  AmountExpected   string `json:"amountExpected"`
+  AmountActual     string `json:"amountActual"`
+  Confirmations    int64  `json:"confirmations"`
+  Status           string `json:"status"`
+  FailureReason    string `json:"failureReason,optional"`
+}
+
+@server(
+  prefix: /api/v1/trade
+  group:  trade
+)
+service trade-api {
+  @doc "创建业务订单"
+  post /orders (CreateOrderReq) returns (CreateOrderResp)
+
+  @doc "创建支付意图"
+  post /payments/intents (CreatePaymentIntentReq) returns (CreatePaymentIntentResp)
+
+  @doc "前端提交交易哈希"
+  post /payments/submit-tx (SubmitTxReq) returns (SubmitTxResp)
+
+  @doc "查询支付状态"
+  get /payments/:paymentNo returns (QueryPaymentResp)
+}
