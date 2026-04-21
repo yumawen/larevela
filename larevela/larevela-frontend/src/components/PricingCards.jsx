@@ -2,7 +2,7 @@
 import React from 'react';
 import './PricingCards.css';
 
-const PricingCards = () => {
+const PricingCards = ({ onStartFreeTrial }) => {
   const plans = [
     {
       name: "Growth",
@@ -133,7 +133,7 @@ const PricingCards = () => {
                           <ShieldIcon />
                           No credit card required
                         </div>
-                        <button className="btn btn-outline">
+                        <button className="btn btn-outline" onClick={() => onStartFreeTrial?.(plan)}>
                           {plan.buttonText}
                         </button>
                       </>
