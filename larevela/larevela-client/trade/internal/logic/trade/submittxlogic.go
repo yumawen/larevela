@@ -5,7 +5,11 @@ package trade
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
+	"payment/paymentclient"
 	"trade/internal/svc"
 	"trade/internal/types"
 
@@ -28,7 +32,34 @@ func NewSubmitTxLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SubmitTx
 }
 
 func (l *SubmitTxLogic) SubmitTx(req *types.SubmitTxReq) (resp *types.SubmitTxResp, err error) {
-	// todo: add your logic here and delete this line
+	paymentNo := strings.TrimSpace(req.PaymentNo)
+	txID := strings.TrimSpace(req.TxId)
+	fromAccount := strings.TrimSpace(req.FromAccount)
+	if paymentNo == "" {
+		paymentNo = fmt.Sprintf("trial-%d", time.Now().UnixNano())
+	}
+	if txID == "" || fromAccount == "" {
+		return nil, fmt.Errorf("paymentNo/txId/fromAccount are required")
+	}
+	l.Infof("trade.SubmitTx start paymentNo=%s txId=%s from=%s", paymentNo, txID, fromAccount)
 
-	return
+	rpcResp, err := l.svcCtx.PaymentRpc.SubmitTx(l.ctx, &paymentclient.SubmitTxReq{
+		PaymentNo:        paymentNo,
+		TxId:             txID,
+		FromAccount:      fromAccount,
+		FromTokenAccount: strings.TrimSpace(req.FromTokenAccount),
+	})
+	if err != nil {
+		logx.WithContext(l.ctx).Errorf("submit tx rpc failed, paymentNo=%s txId=%s err=%v", paymentNo, txID, err)
+		return nil, err
+	}
+	l.Infof("trade.SubmitTx success paymentNo=%s txId=%s status=%s confirmation=%s",
+		rpcResp.PaymentNo, rpcResp.TxId, rpcResp.Status, rpcResp.ConfirmationStatus)
+
+	return &types.SubmitTxResp{
+		PaymentNo:          rpcResp.PaymentNo,
+		TxId:               rpcResp.TxId,
+		ConfirmationStatus: rpcResp.ConfirmationStatus,
+		Status:             rpcResp.Status,
+	}, nil
 }

@@ -23,7 +23,12 @@ func NewLedgerServer(svcCtx *svc.ServiceContext) *LedgerServer {
 	}
 }
 
-func (s *LedgerServer) Ping(ctx context.Context, in *ledger.Request) (*ledger.Response, error) {
-	l := logic.NewPingLogic(ctx, s.svcCtx)
-	return l.Ping(in)
+func (s *LedgerServer) CreateEntry(ctx context.Context, in *ledger.CreateEntryReq) (*ledger.CreateEntryResp, error) {
+	l := logic.NewCreateEntryLogic(ctx, s.svcCtx)
+	return l.CreateEntry(in)
+}
+
+func (s *LedgerServer) GetEntry(ctx context.Context, in *ledger.GetEntryReq) (*ledger.GetEntryResp, error) {
+	l := logic.NewGetEntryLogic(ctx, s.svcCtx)
+	return l.GetEntry(in)
 }

@@ -23,7 +23,10 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(
+		c.RestConf,
+		rest.WithCors("http://localhost:5174", "http://localhost:5173"),
+	)
 	defer server.Stop()
 
 	ctx := svc.NewServiceContext(c)

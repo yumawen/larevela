@@ -52,6 +52,10 @@ type CreatePaymentIntentResp struct {
 	Status               string `json:"status"`
 }
 
+type QueryPaymentReq struct {
+	PaymentNo string `path:"paymentNo"`
+}
+
 type QueryPaymentResp struct {
 	PaymentNo            string `json:"paymentNo"`
 	OrderNo              string `json:"orderNo"`
@@ -77,7 +81,7 @@ type SubmitTxReq struct {
 	PaymentNo        string `json:"paymentNo"`
 	TxId             string `json:"txId"`
 	FromAccount      string `json:"fromAccount"`
-	FromTokenAccount string `json:"fromTokenAccount,optional"`
+	FromTokenAccount string `json:"fromTokenAccount"`
 }
 
 type SubmitTxResp struct {

@@ -1,6 +1,20 @@
 Name: payment.rpc
-ListenOn: 0.0.0.0:8080
-Etcd:
-  Hosts:
-  - 127.0.0.1:2379
-  Key: payment.rpc
+ListenOn: 0.0.0.0:8082
+mysql:
+  user: root
+  password: "123456"
+  host: localhost
+  port: 3306
+  dbname: larevela
+TrialTransfer:
+  ReceiverAccount: Gh7y4pSdXSmmvvZuuB5ssmCoijH6PvoVxEzeBPgdvi6R
+  AmountSol: "0.1"
+OrderRpc:
+  Endpoints:
+    - 127.0.0.1:8081
+ChainRpc:
+  Endpoints:
+    - 127.0.0.1:8083
+LedgerRpc:
+  Endpoints:
+    - 127.0.0.1:8084

@@ -1,6 +1,8 @@
 Name: ledger.rpc
-ListenOn: 0.0.0.0:8080
-Etcd:
-  Hosts:
-  - 127.0.0.1:2379
-  Key: ledger.rpc
+ListenOn: 0.0.0.0:8084
+mysql:
+  user: root
+  password: "123456"
+  host: localhost
+  port: 3306
+  dbname: larevela

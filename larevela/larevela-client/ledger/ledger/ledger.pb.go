@@ -21,27 +21,39 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Request struct {
+type CreateEntryReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ping          string                 `protobuf:"bytes,1,opt,name=ping,proto3" json:"ping,omitempty"`
+	EntryNo       string                 `protobuf:"bytes,1,opt,name=entryNo,proto3" json:"entryNo,omitempty"`
+	PaymentNo     string                 `protobuf:"bytes,2,opt,name=paymentNo,proto3" json:"paymentNo,omitempty"`
+	OrderNo       string                 `protobuf:"bytes,3,opt,name=orderNo,proto3" json:"orderNo,omitempty"`
+	UserId        int64                  `protobuf:"varint,4,opt,name=userId,proto3" json:"userId,omitempty"`
+	ChainType     string                 `protobuf:"bytes,5,opt,name=chainType,proto3" json:"chainType,omitempty"`
+	Network       string                 `protobuf:"bytes,6,opt,name=network,proto3" json:"network,omitempty"`
+	ChainId       int64                  `protobuf:"varint,7,opt,name=chainId,proto3" json:"chainId,omitempty"`
+	EntryType     string                 `protobuf:"bytes,8,opt,name=entryType,proto3" json:"entryType,omitempty"`
+	AssetSymbol   string                 `protobuf:"bytes,9,opt,name=assetSymbol,proto3" json:"assetSymbol,omitempty"`
+	AssetAddress  string                 `protobuf:"bytes,10,opt,name=assetAddress,proto3" json:"assetAddress,omitempty"`
+	Amount        string                 `protobuf:"bytes,11,opt,name=amount,proto3" json:"amount,omitempty"`
+	Direction     string                 `protobuf:"bytes,12,opt,name=direction,proto3" json:"direction,omitempty"`
+	Remark        string                 `protobuf:"bytes,13,opt,name=remark,proto3" json:"remark,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Request) Reset() {
-	*x = Request{}
+func (x *CreateEntryReq) Reset() {
+	*x = CreateEntryReq{}
 	mi := &file_ledger_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Request) String() string {
+func (x *CreateEntryReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Request) ProtoMessage() {}
+func (*CreateEntryReq) ProtoMessage() {}
 
-func (x *Request) ProtoReflect() protoreflect.Message {
+func (x *CreateEntryReq) ProtoReflect() protoreflect.Message {
 	mi := &file_ledger_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -53,39 +65,124 @@ func (x *Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Request.ProtoReflect.Descriptor instead.
-func (*Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateEntryReq.ProtoReflect.Descriptor instead.
+func (*CreateEntryReq) Descriptor() ([]byte, []int) {
 	return file_ledger_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Request) GetPing() string {
+func (x *CreateEntryReq) GetEntryNo() string {
 	if x != nil {
-		return x.Ping
+		return x.EntryNo
 	}
 	return ""
 }
 
-type Response struct {
+func (x *CreateEntryReq) GetPaymentNo() string {
+	if x != nil {
+		return x.PaymentNo
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetOrderNo() string {
+	if x != nil {
+		return x.OrderNo
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *CreateEntryReq) GetChainType() string {
+	if x != nil {
+		return x.ChainType
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetNetwork() string {
+	if x != nil {
+		return x.Network
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetChainId() int64 {
+	if x != nil {
+		return x.ChainId
+	}
+	return 0
+}
+
+func (x *CreateEntryReq) GetEntryType() string {
+	if x != nil {
+		return x.EntryType
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetAssetSymbol() string {
+	if x != nil {
+		return x.AssetSymbol
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetAssetAddress() string {
+	if x != nil {
+		return x.AssetAddress
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetDirection() string {
+	if x != nil {
+		return x.Direction
+	}
+	return ""
+}
+
+func (x *CreateEntryReq) GetRemark() string {
+	if x != nil {
+		return x.Remark
+	}
+	return ""
+}
+
+type CreateEntryResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Pong          string                 `protobuf:"bytes,1,opt,name=pong,proto3" json:"pong,omitempty"`
+	EntryNo       string                 `protobuf:"bytes,1,opt,name=entryNo,proto3" json:"entryNo,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Response) Reset() {
-	*x = Response{}
+func (x *CreateEntryResp) Reset() {
+	*x = CreateEntryResp{}
 	mi := &file_ledger_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Response) String() string {
+func (x *CreateEntryResp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Response) ProtoMessage() {}
+func (*CreateEntryResp) ProtoMessage() {}
 
-func (x *Response) ProtoReflect() protoreflect.Message {
+func (x *CreateEntryResp) ProtoReflect() protoreflect.Message {
 	mi := &file_ledger_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -97,14 +194,213 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Response.ProtoReflect.Descriptor instead.
-func (*Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateEntryResp.ProtoReflect.Descriptor instead.
+func (*CreateEntryResp) Descriptor() ([]byte, []int) {
 	return file_ledger_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Response) GetPong() string {
+func (x *CreateEntryResp) GetEntryNo() string {
 	if x != nil {
-		return x.Pong
+		return x.EntryNo
+	}
+	return ""
+}
+
+func (x *CreateEntryResp) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type GetEntryReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EntryNo       string                 `protobuf:"bytes,1,opt,name=entryNo,proto3" json:"entryNo,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEntryReq) Reset() {
+	*x = GetEntryReq{}
+	mi := &file_ledger_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEntryReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEntryReq) ProtoMessage() {}
+
+func (x *GetEntryReq) ProtoReflect() protoreflect.Message {
+	mi := &file_ledger_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEntryReq.ProtoReflect.Descriptor instead.
+func (*GetEntryReq) Descriptor() ([]byte, []int) {
+	return file_ledger_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetEntryReq) GetEntryNo() string {
+	if x != nil {
+		return x.EntryNo
+	}
+	return ""
+}
+
+type GetEntryResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EntryNo       string                 `protobuf:"bytes,1,opt,name=entryNo,proto3" json:"entryNo,omitempty"`
+	PaymentNo     string                 `protobuf:"bytes,2,opt,name=paymentNo,proto3" json:"paymentNo,omitempty"`
+	OrderNo       string                 `protobuf:"bytes,3,opt,name=orderNo,proto3" json:"orderNo,omitempty"`
+	UserId        int64                  `protobuf:"varint,4,opt,name=userId,proto3" json:"userId,omitempty"`
+	ChainType     string                 `protobuf:"bytes,5,opt,name=chainType,proto3" json:"chainType,omitempty"`
+	Network       string                 `protobuf:"bytes,6,opt,name=network,proto3" json:"network,omitempty"`
+	ChainId       int64                  `protobuf:"varint,7,opt,name=chainId,proto3" json:"chainId,omitempty"`
+	EntryType     string                 `protobuf:"bytes,8,opt,name=entryType,proto3" json:"entryType,omitempty"`
+	AssetSymbol   string                 `protobuf:"bytes,9,opt,name=assetSymbol,proto3" json:"assetSymbol,omitempty"`
+	AssetAddress  string                 `protobuf:"bytes,10,opt,name=assetAddress,proto3" json:"assetAddress,omitempty"`
+	Amount        string                 `protobuf:"bytes,11,opt,name=amount,proto3" json:"amount,omitempty"`
+	Direction     string                 `protobuf:"bytes,12,opt,name=direction,proto3" json:"direction,omitempty"`
+	Status        string                 `protobuf:"bytes,13,opt,name=status,proto3" json:"status,omitempty"`
+	Remark        string                 `protobuf:"bytes,14,opt,name=remark,proto3" json:"remark,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEntryResp) Reset() {
+	*x = GetEntryResp{}
+	mi := &file_ledger_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEntryResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEntryResp) ProtoMessage() {}
+
+func (x *GetEntryResp) ProtoReflect() protoreflect.Message {
+	mi := &file_ledger_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEntryResp.ProtoReflect.Descriptor instead.
+func (*GetEntryResp) Descriptor() ([]byte, []int) {
+	return file_ledger_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetEntryResp) GetEntryNo() string {
+	if x != nil {
+		return x.EntryNo
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetPaymentNo() string {
+	if x != nil {
+		return x.PaymentNo
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetOrderNo() string {
+	if x != nil {
+		return x.OrderNo
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *GetEntryResp) GetChainType() string {
+	if x != nil {
+		return x.ChainType
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetNetwork() string {
+	if x != nil {
+		return x.Network
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetChainId() int64 {
+	if x != nil {
+		return x.ChainId
+	}
+	return 0
+}
+
+func (x *GetEntryResp) GetEntryType() string {
+	if x != nil {
+		return x.EntryType
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetAssetSymbol() string {
+	if x != nil {
+		return x.AssetSymbol
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetAssetAddress() string {
+	if x != nil {
+		return x.AssetAddress
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetDirection() string {
+	if x != nil {
+		return x.Direction
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GetEntryResp) GetRemark() string {
+	if x != nil {
+		return x.Remark
 	}
 	return ""
 }
@@ -113,13 +409,46 @@ var File_ledger_proto protoreflect.FileDescriptor
 
 const file_ledger_proto_rawDesc = "" +
 	"\n" +
-	"\fledger.proto\x12\x06ledger\"\x1d\n" +
-	"\aRequest\x12\x12\n" +
-	"\x04ping\x18\x01 \x01(\tR\x04ping\"\x1e\n" +
-	"\bResponse\x12\x12\n" +
-	"\x04pong\x18\x01 \x01(\tR\x04pong23\n" +
-	"\x06Ledger\x12)\n" +
-	"\x04Ping\x12\x0f.ledger.Request\x1a\x10.ledger.ResponseB\n" +
+	"\fledger.proto\x12\x06ledger\"\xfe\x02\n" +
+	"\x0eCreateEntryReq\x12\x18\n" +
+	"\aentryNo\x18\x01 \x01(\tR\aentryNo\x12\x1c\n" +
+	"\tpaymentNo\x18\x02 \x01(\tR\tpaymentNo\x12\x18\n" +
+	"\aorderNo\x18\x03 \x01(\tR\aorderNo\x12\x16\n" +
+	"\x06userId\x18\x04 \x01(\x03R\x06userId\x12\x1c\n" +
+	"\tchainType\x18\x05 \x01(\tR\tchainType\x12\x18\n" +
+	"\anetwork\x18\x06 \x01(\tR\anetwork\x12\x18\n" +
+	"\achainId\x18\a \x01(\x03R\achainId\x12\x1c\n" +
+	"\tentryType\x18\b \x01(\tR\tentryType\x12 \n" +
+	"\vassetSymbol\x18\t \x01(\tR\vassetSymbol\x12\"\n" +
+	"\fassetAddress\x18\n" +
+	" \x01(\tR\fassetAddress\x12\x16\n" +
+	"\x06amount\x18\v \x01(\tR\x06amount\x12\x1c\n" +
+	"\tdirection\x18\f \x01(\tR\tdirection\x12\x16\n" +
+	"\x06remark\x18\r \x01(\tR\x06remark\"C\n" +
+	"\x0fCreateEntryResp\x12\x18\n" +
+	"\aentryNo\x18\x01 \x01(\tR\aentryNo\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\"'\n" +
+	"\vGetEntryReq\x12\x18\n" +
+	"\aentryNo\x18\x01 \x01(\tR\aentryNo\"\x94\x03\n" +
+	"\fGetEntryResp\x12\x18\n" +
+	"\aentryNo\x18\x01 \x01(\tR\aentryNo\x12\x1c\n" +
+	"\tpaymentNo\x18\x02 \x01(\tR\tpaymentNo\x12\x18\n" +
+	"\aorderNo\x18\x03 \x01(\tR\aorderNo\x12\x16\n" +
+	"\x06userId\x18\x04 \x01(\x03R\x06userId\x12\x1c\n" +
+	"\tchainType\x18\x05 \x01(\tR\tchainType\x12\x18\n" +
+	"\anetwork\x18\x06 \x01(\tR\anetwork\x12\x18\n" +
+	"\achainId\x18\a \x01(\x03R\achainId\x12\x1c\n" +
+	"\tentryType\x18\b \x01(\tR\tentryType\x12 \n" +
+	"\vassetSymbol\x18\t \x01(\tR\vassetSymbol\x12\"\n" +
+	"\fassetAddress\x18\n" +
+	" \x01(\tR\fassetAddress\x12\x16\n" +
+	"\x06amount\x18\v \x01(\tR\x06amount\x12\x1c\n" +
+	"\tdirection\x18\f \x01(\tR\tdirection\x12\x16\n" +
+	"\x06status\x18\r \x01(\tR\x06status\x12\x16\n" +
+	"\x06remark\x18\x0e \x01(\tR\x06remark2\x7f\n" +
+	"\x06Ledger\x12>\n" +
+	"\vCreateEntry\x12\x16.ledger.CreateEntryReq\x1a\x17.ledger.CreateEntryResp\x125\n" +
+	"\bGetEntry\x12\x13.ledger.GetEntryReq\x1a\x14.ledger.GetEntryRespB\n" +
 	"Z\b./ledgerb\x06proto3"
 
 var (
@@ -134,16 +463,20 @@ func file_ledger_proto_rawDescGZIP() []byte {
 	return file_ledger_proto_rawDescData
 }
 
-var file_ledger_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_ledger_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_ledger_proto_goTypes = []any{
-	(*Request)(nil),  // 0: ledger.Request
-	(*Response)(nil), // 1: ledger.Response
+	(*CreateEntryReq)(nil),  // 0: ledger.CreateEntryReq
+	(*CreateEntryResp)(nil), // 1: ledger.CreateEntryResp
+	(*GetEntryReq)(nil),     // 2: ledger.GetEntryReq
+	(*GetEntryResp)(nil),    // 3: ledger.GetEntryResp
 }
 var file_ledger_proto_depIdxs = []int32{
-	0, // 0: ledger.Ledger.Ping:input_type -> ledger.Request
-	1, // 1: ledger.Ledger.Ping:output_type -> ledger.Response
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 0: ledger.Ledger.CreateEntry:input_type -> ledger.CreateEntryReq
+	2, // 1: ledger.Ledger.GetEntry:input_type -> ledger.GetEntryReq
+	1, // 2: ledger.Ledger.CreateEntry:output_type -> ledger.CreateEntryResp
+	3, // 3: ledger.Ledger.GetEntry:output_type -> ledger.GetEntryResp
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -160,7 +493,7 @@ func file_ledger_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ledger_proto_rawDesc), len(file_ledger_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

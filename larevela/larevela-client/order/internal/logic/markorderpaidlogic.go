@@ -2,6 +2,9 @@ package logic
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
 	"order/internal/svc"
 	"order/order"
@@ -24,7 +27,27 @@ func NewMarkOrderPaidLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Mar
 }
 
 func (l *MarkOrderPaidLogic) MarkOrderPaid(in *order.MarkOrderPaidReq) (*order.MarkOrderPaidResp, error) {
-	// todo: add your logic here and delete this line
+	if l.svcCtx.TradeModel == nil {
+		return nil, fmt.Errorf("database is not configured")
+	}
+	orderNo := strings.TrimSpace(in.OrderNo)
+	if orderNo == "" {
+		return nil, fmt.Errorf("orderNo is required")
+	}
+	l.Infof("order.MarkOrderPaid start orderNo=%s paymentNo=%s", orderNo, strings.TrimSpace(in.PaymentNo))
+	paidAt := in.PaidAt
+	if paidAt == 0 {
+		paidAt = time.Now().Unix()
+	}
 
-	return &order.MarkOrderPaidResp{}, nil
+	if err := l.svcCtx.TradeModel.MarkOrderPaid(l.ctx, orderNo, paidAt); err != nil {
+		l.Errorf("order.MarkOrderPaid failed orderNo=%s err=%v", orderNo, err)
+		return nil, err
+	}
+	l.Infof("order.MarkOrderPaid success orderNo=%s paidAt=%d", orderNo, paidAt)
+
+	return &order.MarkOrderPaidResp{
+		OrderNo: orderNo,
+		Status:  "paid",
+	}, nil
 }

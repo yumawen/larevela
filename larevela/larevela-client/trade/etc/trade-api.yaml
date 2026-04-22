@@ -1,3 +1,9 @@
 Name: trade-api
 Host: 0.0.0.0
 Port: 8888
+PaymentRpc:
+  Endpoints:
+    - 127.0.0.1:8082
+OrderRpc:
+  Endpoints:
+    - 127.0.0.1:8081

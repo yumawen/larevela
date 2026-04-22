@@ -1,6 +1,9 @@
 Name: order.rpc
-ListenOn: 0.0.0.0:8080
-Etcd:
-  Hosts:
-  - 127.0.0.1:2379
-  Key: order.rpc
+# Local dev: fixed port (no Etcd). Change host/port if you deploy elsewhere.
+ListenOn: 0.0.0.0:8081
+mysql:
+  user: root
+  password: "123456"
+  host: localhost
+  port: 3306
+  dbname: larevela

@@ -1,11 +1,11 @@
 -- Multi-chain Web3 wallet payment starter schema
 -- Suggested for services: trade-api, order-rpc, payment-rpc, chain-rpc, ledger-rpc
 
-CREATE DATABASE IF NOT EXISTS `larevela_pay`
+CREATE DATABASE IF NOT EXISTS `larevela`
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE `larevela_pay`;
+USE `larevela`;
 
 -- 1) Business orders managed by order-rpc
 CREATE TABLE IF NOT EXISTS `orders` (
@@ -163,3 +163,32 @@ CREATE TABLE IF NOT EXISTS `idempotency_records` (
   UNIQUE KEY `uk_idem_key` (`idem_key`),
   KEY `idx_biz_type_biz_no` (`biz_type`, `biz_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Idempotency records';
+
+-- 7) Aggregated payment read model for frontend status display
+CREATE TABLE IF NOT EXISTS `payment_view` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `payment_no` VARCHAR(64) NOT NULL COMMENT 'Payment number',
+  `order_no` VARCHAR(64) NOT NULL COMMENT 'Related order number',
+  `tx_id` VARCHAR(128) NULL COMMENT 'Tx hash or Solana signature',
+  `chain_type` VARCHAR(16) NOT NULL DEFAULT 'solana' COMMENT 'evm/solana',
+  `network` VARCHAR(32) NOT NULL DEFAULT 'devnet' COMMENT 'mainnet/testnet/devnet',
+  `chain_id` BIGINT NOT NULL COMMENT 'Chain id',
+  `payer_account` VARCHAR(128) NULL COMMENT 'Payer wallet account/address',
+  `receiver_account` VARCHAR(128) NULL COMMENT 'Receiver wallet account/address',
+  `asset_symbol` VARCHAR(32) NOT NULL COMMENT 'Asset symbol',
+  `amount_expected` DECIMAL(36,18) NOT NULL COMMENT 'Expected payment amount',
+  `amount_actual` DECIMAL(36,18) NULL COMMENT 'Actual paid amount',
+  `status` VARCHAR(32) NOT NULL DEFAULT 'created' COMMENT 'created/submitted/confirming/paid/failed',
+  `confirmation_status` VARCHAR(32) NULL COMMENT 'pending/processed/confirmed/finalized',
+  `confirmations` BIGINT NOT NULL DEFAULT 0 COMMENT 'Confirmation count',
+  `last_scanned_block` BIGINT NOT NULL DEFAULT 0 COMMENT 'Last scanned block',
+  `last_scanned_slot` BIGINT NOT NULL DEFAULT 0 COMMENT 'Last scanned slot',
+  `failure_reason` VARCHAR(255) NULL COMMENT 'Failure reason',
+  `updated_source` VARCHAR(32) NOT NULL DEFAULT 'payment' COMMENT 'payment/confirm/sync',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_payment_no` (`payment_no`),
+  KEY `idx_order_no` (`order_no`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Aggregated payment status view';

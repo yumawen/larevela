@@ -14,11 +14,14 @@ import (
 )
 
 type (
-	Request  = ledger.Request
-	Response = ledger.Response
+	CreateEntryReq  = ledger.CreateEntryReq
+	CreateEntryResp = ledger.CreateEntryResp
+	GetEntryReq     = ledger.GetEntryReq
+	GetEntryResp    = ledger.GetEntryResp
 
 	Ledger interface {
-		Ping(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+		CreateEntry(ctx context.Context, in *CreateEntryReq, opts ...grpc.CallOption) (*CreateEntryResp, error)
+		GetEntry(ctx context.Context, in *GetEntryReq, opts ...grpc.CallOption) (*GetEntryResp, error)
 	}
 
 	defaultLedger struct {
@@ -32,7 +35,12 @@ func NewLedger(cli zrpc.Client) Ledger {
 	}
 }
 
-func (m *defaultLedger) Ping(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+func (m *defaultLedger) CreateEntry(ctx context.Context, in *CreateEntryReq, opts ...grpc.CallOption) (*CreateEntryResp, error) {
 	client := ledger.NewLedgerClient(m.cli.Conn())
-	return client.Ping(ctx, in, opts...)
+	return client.CreateEntry(ctx, in, opts...)
+}
+
+func (m *defaultLedger) GetEntry(ctx context.Context, in *GetEntryReq, opts ...grpc.CallOption) (*GetEntryResp, error) {
+	client := ledger.NewLedgerClient(m.cli.Conn())
+	return client.GetEntry(ctx, in, opts...)
 }
