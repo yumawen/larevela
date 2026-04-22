@@ -37,8 +37,9 @@ func (l *MarkOrderPaidLogic) MarkOrderPaid(in *order.MarkOrderPaidReq) (*order.M
 	l.Infof("order.MarkOrderPaid start orderNo=%s paymentNo=%s", orderNo, strings.TrimSpace(in.PaymentNo))
 	paidAt := in.PaidAt
 	if paidAt == 0 {
-		paidAt = time.Now().Unix()
+		paidAt = time.Now().UTC().Unix()
 	}
+	paidAt = normalizeUnixTimestampSeconds(paidAt)
 
 	if err := l.svcCtx.TradeModel.MarkOrderPaid(l.ctx, orderNo, paidAt); err != nil {
 		l.Errorf("order.MarkOrderPaid failed orderNo=%s err=%v", orderNo, err)

@@ -80,11 +80,19 @@ func (l *SubmitTxLogic) SubmitTx(in *payment.SubmitTxReq) (*payment.SubmitTxResp
 		}
 	}
 
+	fromTokenAccount := strings.TrimSpace(in.FromTokenAccount)
+	if fromTokenAccount == "" {
+		fromTokenAccount = strings.TrimSpace(pi.PayerTokenAccount)
+	}
+	toTokenAccount := strings.TrimSpace(pi.ReceiverTokenAccount)
+
 	err := l.svcCtx.TradeModel.CreateTrialPaymentTx(l.ctx, trademodel.CreateTrialPaymentTxInput{
 		PaymentNo:    paymentNo,
 		TxID:         txID,
 		FromAccount:  fromAccount,
 		ToAccount:    receiverAccount,
+		FromTokenAccount: fromTokenAccount,
+		ToTokenAccount:   toTokenAccount,
 		AmountSol:    amountExpected,
 		ChainType:    pi.ChainType,
 		Network:      pi.Network,

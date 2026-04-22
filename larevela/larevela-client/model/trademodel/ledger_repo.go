@@ -17,12 +17,12 @@ func (m *Model) CreateLedgerEntry(ctx context.Context, in CreateLedgerEntryInput
 INSERT INTO ledger_entries (
   entry_no, payment_no, order_no, user_id, chain_type, network, chain_id, entry_type,
   asset_symbol, asset_address, amount, direction, status, remark, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'posted', ?, NOW(), NOW())
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'posted', ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE
   amount = VALUES(amount),
   direction = VALUES(direction),
   remark = VALUES(remark),
-  updated_at = NOW()
+  updated_at = UTC_TIMESTAMP()
 `
 	_, err := m.conn.ExecCtx(
 		ctx,

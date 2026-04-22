@@ -39,9 +39,9 @@ func (l *CreateOrderLogic) CreateOrder(in *order.CreateOrderReq) (*order.CreateO
 	l.Infof("order.CreateOrder start orderNo=%s bizType=%s bizId=%s userId=%d",
 		orderNo, strings.TrimSpace(in.BizType), strings.TrimSpace(in.BizId), in.UserId)
 
-	expiredAt := time.Now().Add(15 * time.Minute)
+	expiredAt := time.Now().UTC().Add(15 * time.Minute)
 	if in.ExpiredAt > 0 {
-		expiredAt = time.Unix(in.ExpiredAt, 0)
+		expiredAt = time.Unix(normalizeUnixTimestampSeconds(in.ExpiredAt), 0).UTC()
 	}
 
 	err := l.svcCtx.TradeModel.CreateOrder(l.ctx, trademodel.CreateOrderInput{

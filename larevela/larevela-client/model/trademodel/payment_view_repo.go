@@ -31,7 +31,7 @@ INSERT INTO payment_view (
   payment_no, order_no, tx_id, chain_type, network, chain_id, payer_account, receiver_account,
   asset_symbol, amount_expected, amount_actual, status, confirmation_status, confirmations,
   last_scanned_block, last_scanned_slot, failure_reason, updated_source, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE
   order_no = VALUES(order_no),
   tx_id = CASE WHEN VALUES(tx_id) <> '' THEN VALUES(tx_id) ELSE tx_id END,
@@ -50,7 +50,7 @@ ON DUPLICATE KEY UPDATE
   last_scanned_slot = GREATEST(last_scanned_slot, VALUES(last_scanned_slot)),
   failure_reason = VALUES(failure_reason),
   updated_source = VALUES(updated_source),
-  updated_at = NOW()
+  updated_at = UTC_TIMESTAMP()
 `
 
 	_, err := m.conn.ExecCtx(

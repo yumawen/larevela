@@ -15,21 +15,31 @@ func (m *Model) UpsertChainScanCursor(ctx context.Context, in UpsertChainScanCur
 		return fmt.Errorf("missing required chain cursor fields")
 	}
 
-	query := `
+	queryCursors := `
 INSERT INTO chain_scan (
   chain_type, network, chain_id, cursor_type, last_scanned_block, last_scanned_slot,
   last_scanned_tx_id, remark, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE
   last_scanned_block = GREATEST(last_scanned_block, VALUES(last_scanned_block)),
   last_scanned_slot = GREATEST(last_scanned_slot, VALUES(last_scanned_slot)),
   last_scanned_tx_id = VALUES(last_scanned_tx_id),
   remark = VALUES(remark),
-  updated_at = NOW()
+  updated_at = UTC_TIMESTAMP()
 `
-	_, err := m.conn.ExecCtx(
-		ctx,
-		query,
+	queryLegacy := `
+INSERT INTO chain_scan (
+  chain_type, network, chain_id, cursor_type, last_scanned_block, last_scanned_slot,
+  last_scanned_tx_id, remark, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+ON DUPLICATE KEY UPDATE
+  last_scanned_block = GREATEST(last_scanned_block, VALUES(last_scanned_block)),
+  last_scanned_slot = GREATEST(last_scanned_slot, VALUES(last_scanned_slot)),
+  last_scanned_tx_id = VALUES(last_scanned_tx_id),
+  remark = VALUES(remark),
+  updated_at = UTC_TIMESTAMP()
+`
+	args := []any{
 		in.ChainType,
 		in.Network,
 		in.ChainID,
@@ -38,7 +48,20 @@ ON DUPLICATE KEY UPDATE
 		in.LastScannedSlot,
 		strings.TrimSpace(in.LastScannedTxID),
 		strings.TrimSpace(in.Remark),
+	}
+	_, err := m.conn.ExecCtx(
+		ctx,
+		queryCursors,
+		args...,
 	)
+	if err == nil {
+		return nil
+	}
+	// Backward compatibility for environments that still use the legacy `chain_scan` table.
+	if strings.Contains(err.Error(), "1146") || strings.Contains(err.Error(), "doesn't exist") {
+		_, fallbackErr := m.conn.ExecCtx(ctx, queryLegacy, args...)
+		return fallbackErr
+	}
 	return err
 }
 
@@ -59,11 +82,11 @@ func (m *Model) UpsertIdempotencyRecord(ctx context.Context, in UpsertIdempotenc
 	query := `
 INSERT INTO idempotency_records (
   idem_key, biz_type, biz_no, status, response_snapshot, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE
   status = VALUES(status),
   response_snapshot = VALUES(response_snapshot),
-  updated_at = NOW()
+  updated_at = UTC_TIMESTAMP()
 `
 	_, err := m.conn.ExecCtx(
 		ctx,

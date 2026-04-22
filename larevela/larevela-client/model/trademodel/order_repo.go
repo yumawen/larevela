@@ -6,6 +6,22 @@ import (
 	"time"
 )
 
+func normalizeUnixTimestampSeconds(ts int64) int64 {
+	if ts <= 0 {
+		return ts
+	}
+	switch {
+	case ts >= 1_000_000_000_000_000_000:
+		return ts / 1_000_000_000 // nanoseconds
+	case ts >= 1_000_000_000_000_000:
+		return ts / 1_000_000 // microseconds
+	case ts >= 1_000_000_000_000:
+		return ts / 1_000 // milliseconds
+	default:
+		return ts // seconds
+	}
+}
+
 func (m *Model) CreateOrder(ctx context.Context, in CreateOrderInput) error {
 	if err := m.ensureReady(); err != nil {
 		return err
@@ -20,7 +36,7 @@ func (m *Model) CreateOrder(ctx context.Context, in CreateOrderInput) error {
 	query := `
 INSERT INTO orders (
   order_no, biz_type, biz_id, user_id, currency, amount, status, expired_at, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
 ON DUPLICATE KEY UPDATE
   biz_type = VALUES(biz_type),
   biz_id = VALUES(biz_id),
@@ -29,7 +45,7 @@ ON DUPLICATE KEY UPDATE
   amount = VALUES(amount),
   status = VALUES(status),
   expired_at = VALUES(expired_at),
-  updated_at = NOW()
+  updated_at = UTC_TIMESTAMP()
 `
 	_, err := m.conn.ExecCtx(
 		ctx,
@@ -88,12 +104,12 @@ func (m *Model) MarkOrderPaid(ctx context.Context, orderNo string, paidAt int64)
 		return fmt.Errorf("orderNo is required")
 	}
 
-	t := time.Unix(paidAt, 0)
+	t := time.Unix(normalizeUnixTimestampSeconds(paidAt), 0).UTC()
 	query := `
 UPDATE orders
 SET status = 'paid',
     paid_at = ?,
-    updated_at = NOW()
+    updated_at = UTC_TIMESTAMP()
 WHERE order_no = ?
 `
 	_, err := m.conn.ExecCtx(ctx, query, t, orderNo)
@@ -108,6 +124,6 @@ func (m *Model) CloseOrder(ctx context.Context, orderNo string) error {
 		return fmt.Errorf("orderNo is required")
 	}
 
-	_, err := m.conn.ExecCtx(ctx, "UPDATE orders SET status = 'closed', updated_at = NOW() WHERE order_no = ?", orderNo)
+	_, err := m.conn.ExecCtx(ctx, "UPDATE orders SET status = 'closed', updated_at = UTC_TIMESTAMP() WHERE order_no = ?", orderNo)
 	return err
 }

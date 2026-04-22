@@ -93,6 +93,7 @@ func (l *CreatePaymentIntentLogic) CreatePaymentIntent(in *payment.CreatePayment
 
 	var (
 		receiverAccount      string
+		payerTokenAccount    string
 		receiverTokenAccount string
 		assetAddress         string
 		amountExpected       string
@@ -175,6 +176,7 @@ func (l *CreatePaymentIntentLogic) CreatePaymentIntent(in *payment.CreatePayment
 			return nil, fmt.Errorf("failed to derive receiver token account")
 		}
 		receiverTokenAccount = receiverTokenPubKey.String()
+		payerTokenAccount = sourceTokenPubKey.String()
 		createReceiverAtaIx, ataBuildErr := associatedtokenaccount.NewCreateIdempotentInstruction(
 			payerPubKey,
 			receiverPubKey,
@@ -214,24 +216,26 @@ func (l *CreatePaymentIntentLogic) CreatePaymentIntent(in *payment.CreatePayment
 		return nil, fmt.Errorf("failed to serialize unsigned transaction message")
 	}
 	serializedMessage := base64.StdEncoding.EncodeToString(serializedMessageBytes)
-	quoteExpiredAt := time.Now().Add(10 * time.Minute)
+	quoteExpiredAt := time.Now().UTC().Add(10 * time.Minute)
 
 	err = l.svcCtx.TradeModel.CreatePaymentIntent(l.ctx, trademodel.CreatePaymentIntentInput{
-		PaymentNo:         paymentNo,
-		OrderNo:           orderNo,
-		ChainType:         chainType,
-		Network:           network,
-		ChainID:           chainID,
-		PayerAccount:      payerAccount,
-		ReceiverAccount:   receiverAccount,
-		AssetSymbol:       assetSymbol,
-		AssetAddress:      assetAddress,
-		AmountExpected:    amountExpected,
-		Decimals:          decimals,
-		ReferenceID:       strings.TrimSpace(in.ReferenceId),
-		SerializedMessage: serializedMessage,
-		QuoteExpiredAt:    quoteExpiredAt,
-		Status:            "created",
+		PaymentNo:            paymentNo,
+		OrderNo:              orderNo,
+		ChainType:            chainType,
+		Network:              network,
+		ChainID:              chainID,
+		PayerAccount:         payerAccount,
+		ReceiverAccount:      receiverAccount,
+		PayerTokenAccount:    payerTokenAccount,
+		ReceiverTokenAccount: receiverTokenAccount,
+		AssetSymbol:          assetSymbol,
+		AssetAddress:         assetAddress,
+		AmountExpected:       amountExpected,
+		Decimals:             decimals,
+		ReferenceID:          strings.TrimSpace(in.ReferenceId),
+		SerializedMessage:    serializedMessage,
+		QuoteExpiredAt:       quoteExpiredAt,
+		Status:               "created",
 	})
 	if err != nil {
 		logx.WithContext(l.ctx).Errorf("create payment intent persist failed, paymentNo=%s err=%v", paymentNo, err)

@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `payment_transactions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='On-chain payment transactions';
 
 -- 4) Chain scan state for chain-rpc background sync
-CREATE TABLE IF NOT EXISTS `chain_scan_cursors` (
+CREATE TABLE IF NOT EXISTS `chain_scan` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `chain_type` VARCHAR(16) NOT NULL DEFAULT 'evm' COMMENT 'evm/solana',
   `network` VARCHAR(32) NOT NULL DEFAULT 'mainnet' COMMENT 'mainnet/testnet/devnet',

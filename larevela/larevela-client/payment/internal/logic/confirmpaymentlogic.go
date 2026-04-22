@@ -86,7 +86,7 @@ func (l *ConfirmPaymentLogic) ConfirmPayment(in *payment.ConfirmPaymentReq) (*pa
 		ChainId:              pi.ChainID,
 		TxId:                 pi.TxID,
 		ReceiverAccount:      pi.ReceiverAccount,
-		ReceiverTokenAccount: "",
+		ReceiverTokenAccount: pi.ReceiverTokenAccount,
 		AssetAddress:         pi.AssetAddress,
 		ExpectedAmount:       pi.AmountExpected,
 		ReferenceId:          "",
@@ -185,7 +185,7 @@ func (l *ConfirmPaymentLogic) ConfirmPayment(in *payment.ConfirmPaymentReq) (*pa
 		_, orderErr := l.svcCtx.OrderRpc.MarkOrderPaid(l.ctx, &orderclient.MarkOrderPaidReq{
 			OrderNo:   pi.OrderNo,
 			PaymentNo: paymentNo,
-			PaidAt:    time.Now().Unix(),
+			PaidAt:    time.Now().UTC().Unix(),
 		})
 		if orderErr != nil {
 			logx.WithContext(l.ctx).Errorf("mark order paid failed, paymentNo=%s orderNo=%s err=%v", paymentNo, pi.OrderNo, orderErr)
