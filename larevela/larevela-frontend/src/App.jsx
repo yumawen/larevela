@@ -4,6 +4,17 @@ import PricingCards from './components/PricingCards';
 import ContractLab from './pages/ContractLab';
 import './App.css';
 
+const DEVNET_USDC_MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+const truncateAddress = (address) => {
+  if (!address) {
+    return '';
+  }
+  if (address.length <= 12) {
+    return address;
+  }
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+};
+
 const getSolflareProvider = () => {
   if (window.solflare?.isSolflare) {
     return window.solflare;
@@ -35,6 +46,7 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isTrialSubmitting, setIsTrialSubmitting] = useState(false);
   const [trialMessage, setTrialMessage] = useState('');
+  const [paymentAsset, setPaymentAsset] = useState('SOL');
 
   useEffect(() => {
     const provider = getSolflareProvider();
@@ -112,8 +124,8 @@ function App() {
             chainType: 'solana',
             network: 'devnet',
             chainId: 103,
-            assetSymbol: 'SOL',
-            assetAddress: '',
+            assetSymbol: paymentAsset,
+            assetAddress: paymentAsset === 'USDC' ? DEVNET_USDC_MINT : '',
             payerAccount: payerAddress,
             referenceId: plan?.type || 'free_trial',
           }),
@@ -161,7 +173,7 @@ function App() {
         }
         localStorage.setItem('lastTxId', signature);
 
-        setTrialMessage('交易已提交并广播成功。 / Transaction signed, submitted, and broadcast successfully.');
+        setTrialMessage(`交易已提交并广播成功（${paymentAsset}）。 / Transaction signed, submitted, and broadcast successfully (${paymentAsset}).`);
         await new Promise((resolve) => setTimeout(resolve, 1500));
         navigateTo('/contract-lab', {});
       } catch (error) {
@@ -225,7 +237,25 @@ function App() {
   return (
     <div className="app">
       <header className="wallet-bar">
-        <div className="wallet-status">{walletAddress ? `Connected: ${walletAddress}` : 'Wallet not connected'}</div>
+        <div className="wallet-status">
+          {walletAddress ? (
+            <span title={walletAddress}>Connected: {truncateAddress(walletAddress)}</span>
+          ) : (
+            'Wallet not connected'
+          )}
+        </div>
+        <div className="payment-asset-selector">
+          <label htmlFor="payment-asset">Select payment token</label>
+          <select
+            id="payment-asset"
+            value={paymentAsset}
+            onChange={(event) => setPaymentAsset(event.target.value)}
+            disabled={isTrialSubmitting}
+          >
+            <option value="SOL">SOL</option>
+            <option value="USDC">USDC</option>
+          </select>
+        </div>
         <button
           className="wallet-button"
           onClick={walletAddress ? disconnectWallet : connectWallet}
