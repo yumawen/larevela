@@ -1,160 +1,122 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  clusterApiUrl,
+} from '@solana/web3.js';
 import './ContractLab.css';
 
-const getMetaMaskProvider = () => {
-  const { ethereum } = window;
-  if (!ethereum) {
-    return null;
+const getSolflareProvider = () => {
+  if (window.solflare?.isSolflare) {
+    return window.solflare;
   }
-  if (Array.isArray(ethereum.providers) && ethereum.providers.length > 0) {
-    return ethereum.providers.find((provider) => provider.isMetaMask) || null;
-  }
-  return ethereum.isMetaMask ? ethereum : null;
-};
 
-const formatEthFromHexWei = (hexWei) => {
-  try {
-    const wei = BigInt(hexWei);
-    const whole = wei / 1000000000000000000n;
-    const fraction = (wei % 1000000000000000000n).toString().padStart(18, '0').slice(0, 6);
-    return `${whole.toString()}.${fraction} ETH`;
-  } catch (_error) {
-    return '0 ETH';
+  if (window.solflare && typeof window.solflare.connect === 'function') {
+    return window.solflare;
   }
-};
 
-const parseEthToHexWei = (ethValue) => {
-  const value = ethValue.trim();
-  if (!/^\d+(\.\d+)?$/.test(value)) {
-    throw new Error('Invalid ETH amount format.');
+  if (window.solana?.isSolflare) {
+    return window.solana;
   }
-  const [wholePart, fractionPart = ''] = value.split('.');
-  const safeFraction = fractionPart.slice(0, 18).padEnd(18, '0');
-  const wei = BigInt(wholePart) * 1000000000000000000n + BigInt(safeFraction || '0');
-  if (wei <= 0n) {
-    throw new Error('Amount must be greater than 0.');
-  }
-  return `0x${wei.toString(16)}`;
-};
 
-const getExplorerTxUrl = (chainId, txHash) => {
-  if (chainId === '0xaa36a7') {
-    return `https://sepolia.etherscan.io/tx/${txHash}`;
+  if (Array.isArray(window.solana?.providers)) {
+    return window.solana.providers.find((provider) => provider.isSolflare) || null;
   }
-  if (chainId === '0x1') {
-    return `https://etherscan.io/tx/${txHash}`;
+
+  if (Array.isArray(window.solflare?.providers)) {
+    return window.solflare.providers.find((provider) => provider.isSolflare) || null;
   }
-  return '';
+
+  return null;
 };
 
 const ContractLab = ({ onBack }) => {
+  const connection = useMemo(() => new Connection(clusterApiUrl('devnet'), 'confirmed'), []);
   const [readResult, setReadResult] = useState('');
   const [readLoading, setReadLoading] = useState(false);
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [amount, setAmount] = useState('0.0001');
-  const [txStatus, setTxStatus] = useState('idle');
-  const [txMessage, setTxMessage] = useState('');
-  const [txHash, setTxHash] = useState('');
-  const [txExplorerUrl, setTxExplorerUrl] = useState('');
+  const [paymentNo, setPaymentNo] = useState('');
+  const [paymentStatusLoading, setPaymentStatusLoading] = useState(false);
+  const [paymentStatusError, setPaymentStatusError] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState('');
+  const paymentRefreshInFlightRef = useRef(false);
+
+  useEffect(() => {
+    const savedPaymentNo = localStorage.getItem('lastPaymentNo') || '';
+    if (savedPaymentNo) {
+      setPaymentNo(savedPaymentNo);
+    }
+  }, []);
 
   const ensureWalletConnected = async () => {
-    const provider = getMetaMaskProvider();
+    const provider = getSolflareProvider();
     if (!provider) {
-      throw new Error('MetaMask not found. Please install and unlock MetaMask.');
+      throw new Error('Solflare Wallet not found. Please install and unlock Solflare.');
     }
 
-    const accounts = await provider.request({ method: 'eth_accounts' });
-    if (accounts?.length > 0) {
-      return { provider, address: accounts[0] };
+    if (provider.publicKey) {
+      return { provider, address: provider.publicKey.toBase58() };
     }
 
-    const requestedAccounts = await provider.request({ method: 'eth_requestAccounts' });
-    const address = requestedAccounts?.[0];
+    const response = await provider.connect();
+    const address = response?.publicKey?.toBase58?.() || provider.publicKey?.toBase58?.();
     if (!address) {
-      throw new Error('No account returned by MetaMask.');
+      throw new Error('No account returned by Solflare.');
     }
     return { provider, address };
   };
 
-  const readOnchainData = async () => {
+  const queryWalletBalance = async () => {
     setReadLoading(true);
     setReadResult('');
 
     try {
-      const { provider, address } = await ensureWalletConnected();
-      const [balanceHex, chainId] = await Promise.all([
-        provider.request({ method: 'eth_getBalance', params: [address, 'latest'] }),
-        provider.request({ method: 'eth_chainId' }),
-      ]);
-
-      setReadResult(`Address: ${address} | Balance: ${formatEthFromHexWei(balanceHex)} | Chain ID: ${chainId}`);
+      const { address } = await ensureWalletConnected();
+      const lamports = await connection.getBalance(new PublicKey(address));
+      const balanceSol = (lamports / LAMPORTS_PER_SOL).toFixed(6);
+      setReadResult(`Wallet balance: ${balanceSol} SOL (devnet) | Address: ${address}`);
     } catch (error) {
-      setReadResult(error?.message || 'Read failed. Please retry.');
+      setReadResult(error?.message || 'Query failed. Please retry.');
     } finally {
       setReadLoading(false);
     }
   };
 
-  const submitWriteTx = async () => {
+  const refreshPaymentStatus = async ({ silent = false } = {}) => {
+    const normalizedPaymentNo = paymentNo.trim();
+    if (!normalizedPaymentNo) {
+      setPaymentStatus(null);
+      setPaymentStatusError('Please input payment number first.');
+      return;
+    }
+
+    if (paymentRefreshInFlightRef.current) {
+      return;
+    }
+    paymentRefreshInFlightRef.current = true;
+    if (!silent) {
+      setPaymentStatusLoading(true);
+    }
+    setPaymentStatusError('');
+
     try {
-      const { provider, address } = await ensureWalletConnected();
-      const value = parseEthToHexWei(amount);
-      const to = recipientAddress || address;
-      const chainId = await provider.request({ method: 'eth_chainId' });
-
-      setTxStatus('pending');
-      setTxMessage('Transaction submitted, waiting for confirmation...');
-      setTxHash('');
-      setTxExplorerUrl('');
-
-      const hash = await provider.request({
-        method: 'eth_sendTransaction',
-        params: [
-          {
-            from: address,
-            to,
-            value,
-          },
-        ],
-      });
-      setTxHash(hash);
-      setTxExplorerUrl(getExplorerTxUrl(chainId, hash));
-
-      let receipt = null;
-      for (let i = 0; i < 30; i += 1) {
-        // Poll receipt until tx gets mined.
-        // eslint-disable-next-line no-await-in-loop
-        receipt = await provider.request({
-          method: 'eth_getTransactionReceipt',
-          params: [hash],
-        });
-        if (receipt) {
-          break;
-        }
-        // eslint-disable-next-line no-await-in-loop
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+      const resp = await fetch(`http://localhost:8888/api/v1/trade/payments/${encodeURIComponent(normalizedPaymentNo)}`);
+      if (!resp.ok) {
+        throw new Error('Failed to query payment status.');
       }
-
-      if (!receipt) {
-        setTxStatus('failed');
-        setTxMessage('Timed out waiting for on-chain confirmation.');
-        return;
-      }
-
-      if (receipt.status === '0x1') {
-        setTxStatus('success');
-        setTxMessage('Transaction confirmed on-chain.');
-      } else {
-        setTxStatus('failed');
-        setTxMessage('Transaction failed on-chain.');
-      }
-
-      if (!getExplorerTxUrl(chainId, hash)) {
-        setTxMessage((prev) => `${prev} (Explorer link unavailable for current network.)`);
-      }
+      const data = await resp.json();
+      setPaymentStatus(data);
+      localStorage.setItem('lastPaymentNo', normalizedPaymentNo);
+      setLastRefreshedAt(new Date().toLocaleTimeString());
     } catch (error) {
-      setTxStatus('failed');
-      setTxMessage(error?.message || 'Transaction failed or was rejected.');
+      setPaymentStatus(null);
+      setPaymentStatusError(error?.message || 'Failed to refresh payment status.');
+    } finally {
+      paymentRefreshInFlightRef.current = false;
+      if (!silent) {
+        setPaymentStatusLoading(false);
+      }
     }
   };
 
@@ -164,54 +126,50 @@ const ContractLab = ({ onBack }) => {
         <button className="lab-back" onClick={onBack}>
           Back to Pricing
         </button>
-        <h2>Contract Interaction Lab (MetaMask Only)</h2>
+        <h2>Contract Interaction Lab (Solflare Only)</h2>
       </div>
 
       <div className="lab-card">
-        <h3>1) Read (View/Pure style call)</h3>
-        <p className="lab-muted">Read-only RPC calls: fetch account ETH balance and current chain id.</p>
-        <button className="lab-btn" onClick={readOnchainData} disabled={readLoading}>
-          {readLoading ? 'Reading...' : 'Read On-chain Data'}
+        <h3>1) Query wallet balance</h3>
+        <p className="lab-muted">
+          Read-only devnet RPC: SOL balance for the connected Solflare wallet address.
+        </p>
+        <button className="lab-btn" onClick={queryWalletBalance} disabled={readLoading}>
+          {readLoading ? 'Querying...' : 'Query balance'}
         </button>
         {readResult && <p className="lab-result">{readResult}</p>}
       </div>
 
       <div className="lab-card">
-        <h3>2) Write (State-changing tx)</h3>
-        <p className="lab-muted">Send ETH transfer with MetaMask and track transaction status.</p>
-        <label className="lab-label" htmlFor="recipient">
-          Recipient address (optional, defaults to your connected wallet)
+        <h3>2) Query payment status (backend)</h3>
+        <p className="lab-muted">Refresh payment status from trade-api aggregated view.</p>
+        <label className="lab-label" htmlFor="paymentNo">
+          Payment number
         </label>
         <input
-          id="recipient"
+          id="paymentNo"
           className="lab-input"
-          placeholder="Enter EVM address (0x...)"
-          value={recipientAddress}
-          onChange={(event) => setRecipientAddress(event.target.value.trim())}
+          placeholder="pay-..."
+          value={paymentNo}
+          onChange={(event) => setPaymentNo(event.target.value)}
         />
-        <label className="lab-label" htmlFor="amount">
-          Amount (ETH)
-        </label>
-        <input
-          id="amount"
-          className="lab-input"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-        />
-        <button className="lab-btn" onClick={submitWriteTx} disabled={txStatus === 'pending'}>
-          {txStatus === 'pending' ? 'Pending...' : 'Send Transaction'}
+        <button className="lab-btn" onClick={refreshPaymentStatus} disabled={paymentStatusLoading}>
+          {paymentStatusLoading ? 'Refreshing...' : 'Refresh payment status'}
         </button>
-        <p className={`lab-status ${txStatus}`}>Status: {txStatus === 'idle' ? 'Not started' : txStatus}</p>
-        {txMessage && <p className="lab-result">{txMessage}</p>}
-        {txHash && txExplorerUrl && (
-          <a
-            className="lab-link"
-            href={txExplorerUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            View transaction on Explorer
-          </a>
+        {lastRefreshedAt && <p className="lab-muted">Last refreshed at: {lastRefreshedAt}</p>}
+        {paymentStatusError && <p className="lab-result">{paymentStatusError}</p>}
+        {paymentStatus && (
+          <div className="lab-result">
+            <p>PaymentNo: {paymentStatus.paymentNo || '-'}</p>
+            <p>OrderNo: {paymentStatus.orderNo || '-'}</p>
+            <p>Status: {paymentStatus.status || '-'}</p>
+            <p>Confirmation: {paymentStatus.confirmationStatus || '-'} ({paymentStatus.confirmations ?? 0})</p>
+            <p>TxId: {paymentStatus.txId || '-'}</p>
+            <p>Amount: {paymentStatus.amountActual || '-'} / expected {paymentStatus.amountExpected || '-'}</p>
+            <p>From: {paymentStatus.payerAccount || '-'}</p>
+            <p>To: {paymentStatus.receiverAccount || '-'}</p>
+            {paymentStatus.failureReason && <p>Failure reason: {paymentStatus.failureReason}</p>}
+          </div>
         )}
       </div>
     </section>

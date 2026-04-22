@@ -1,17 +1,31 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Connection, Message, Transaction, clusterApiUrl } from '@solana/web3.js';
 import PricingCards from './components/PricingCards';
 import ContractLab from './pages/ContractLab';
 import './App.css';
 
-const getMetaMaskProvider = () => {
-  const { ethereum } = window;
-  if (!ethereum) {
-    return null;
+const getSolflareProvider = () => {
+  if (window.solflare?.isSolflare) {
+    return window.solflare;
   }
-  if (Array.isArray(ethereum.providers) && ethereum.providers.length > 0) {
-    return ethereum.providers.find((provider) => provider.isMetaMask) || null;
+
+  if (window.solflare && typeof window.solflare.connect === 'function') {
+    return window.solflare;
   }
-  return ethereum.isMetaMask ? ethereum : null;
+
+  if (window.solana?.isSolflare) {
+    return window.solana;
+  }
+
+  if (Array.isArray(window.solana?.providers)) {
+    return window.solana.providers.find((provider) => provider.isSolflare) || null;
+  }
+
+  if (Array.isArray(window.solflare?.providers)) {
+    return window.solflare.providers.find((provider) => provider.isSolflare) || null;
+  }
+
+  return null;
 };
 
 function App() {
@@ -19,40 +33,35 @@ function App() {
   const [walletAddress, setWalletAddress] = useState('');
   const [walletError, setWalletError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-
-  const shortAddress = useMemo(() => {
-    if (!walletAddress) {
-      return '';
-    }
-    return `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
-  }, [walletAddress]);
+  const [isTrialSubmitting, setIsTrialSubmitting] = useState(false);
+  const [trialMessage, setTrialMessage] = useState('');
 
   useEffect(() => {
-    const provider = getMetaMaskProvider();
+    const provider = getSolflareProvider();
     if (!provider) {
       return undefined;
     }
 
-    const initWallet = async () => {
-      try {
-        const accounts = await provider.request({ method: 'eth_accounts' });
-        if (accounts?.length > 0) {
-          setWalletAddress(accounts[0]);
-        }
-      } catch (_error) {
-        // ignore silent init error
-      }
+    const syncAddressFromProvider = () => {
+      const address = provider.publicKey?.toBase58?.() || '';
+      setWalletAddress(address);
     };
 
-    initWallet();
+    syncAddressFromProvider();
 
-    const handleAccountChanged = (accounts) => {
-      setWalletAddress(accounts?.[0] || '');
+    const handleAccountChanged = (publicKey) => {
+      setWalletAddress(publicKey?.toBase58?.() || '');
     };
-    provider.on('accountsChanged', handleAccountChanged);
+    const handleDisconnect = () => {
+      setWalletAddress('');
+    };
+
+    provider.on('accountChanged', handleAccountChanged);
+    provider.on('disconnect', handleDisconnect);
 
     return () => {
-      provider.removeListener('accountsChanged', handleAccountChanged);
+      provider.removeListener('accountChanged', handleAccountChanged);
+      provider.removeListener('disconnect', handleDisconnect);
     };
   }, []);
 
@@ -71,22 +80,121 @@ function App() {
     setPathname(nextPath);
   };
 
-  const handleStartFreeTrial = () => {
-    navigateTo('/contract-lab', {});
+  const handleStartFreeTrial = (plan) => {
+    const decodeBase64ToBytes = (value) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+
+    const submitTrial = async () => {
+      setWalletError('');
+      setTrialMessage('');
+      setIsTrialSubmitting(true);
+
+      try {
+        const provider = getSolflareProvider();
+        if (!provider) {
+          throw new Error('Solflare not detected. Please install and unlock Solflare Wallet.');
+        }
+
+        let payerAddress = walletAddress;
+        if (!payerAddress) {
+          const connectResponse = await provider.connect();
+          payerAddress = connectResponse?.publicKey?.toBase58?.() || provider.publicKey?.toBase58?.() || '';
+          if (!payerAddress) {
+            throw new Error('No account returned by Solflare.');
+          }
+          setWalletAddress(payerAddress);
+        }
+
+        const intentResp = await fetch('http://localhost:8888/api/v1/trade/payments/intents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderNo: '',
+            chainType: 'solana',
+            network: 'devnet',
+            chainId: 103,
+            assetSymbol: 'SOL',
+            assetAddress: '',
+            payerAccount: payerAddress,
+            referenceId: plan?.type || 'free_trial',
+          }),
+        });
+        if (!intentResp.ok) {
+          throw new Error('Failed to create payment intent.');
+        }
+        const intent = await intentResp.json();
+        if (!intent?.serializedMessage || !intent?.paymentNo) {
+          throw new Error('Payment intent is missing serializedMessage/paymentNo.');
+        }
+        localStorage.setItem('lastPaymentNo', intent.paymentNo);
+
+        const messageBytes = decodeBase64ToBytes(intent.serializedMessage);
+        const txMessage = Message.from(messageBytes);
+        const unsignedTx = Transaction.populate(txMessage);
+
+        let signature = '';
+        if (provider.signAndSendTransaction) {
+          const signed = await provider.signAndSendTransaction(unsignedTx);
+          signature = signed?.signature || '';
+        } else if (provider.signTransaction) {
+          const signedTx = await provider.signTransaction(unsignedTx);
+          const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+          signature = await connection.sendRawTransaction(signedTx.serialize());
+        } else {
+          throw new Error('Solflare provider does not support transaction signing.');
+        }
+        if (!signature) {
+          throw new Error('No transaction signature returned by Solflare.');
+        }
+
+        const submitResp = await fetch('http://localhost:8888/api/v1/trade/payments/submit-tx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentNo: intent.paymentNo,
+            txId: signature,
+            fromAccount: payerAddress,
+            fromTokenAccount: '',
+          }),
+        });
+        if (!submitResp.ok) {
+          throw new Error('Failed to submit transaction hash.');
+        }
+        localStorage.setItem('lastTxId', signature);
+
+        setTrialMessage('交易已提交并广播成功。 / Transaction signed, submitted, and broadcast successfully.');
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        navigateTo('/contract-lab', {});
+      } catch (error) {
+        setWalletError(error?.message || 'Start Free Trial failed.');
+      } finally {
+        setIsTrialSubmitting(false);
+      }
+    };
+
+    setWalletError('');
+    if (isTrialSubmitting) {
+      return;
+    }
+    submitTrial();
   };
 
   const connectWallet = async () => {
-    const provider = getMetaMaskProvider();
+    const provider = getSolflareProvider();
     if (!provider) {
-      setWalletError('MetaMask not detected. Please install and unlock MetaMask.');
+      setWalletError('Solflare not detected. Please install and unlock Solflare Wallet.');
       return;
     }
 
     try {
       setWalletError('');
+      setTrialMessage('');
       setIsConnecting(true);
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      setWalletAddress(accounts?.[0] || '');
+      const response = await provider.connect();
+      const address = response?.publicKey?.toBase58?.() || provider.publicKey?.toBase58?.() || '';
+      if (!address) {
+        throw new Error('No account returned by Solflare.');
+      }
+      setWalletAddress(address);
     } catch (_error) {
       setWalletError('Wallet connection failed or was rejected.');
     } finally {
@@ -95,19 +203,17 @@ function App() {
   };
 
   const disconnectWallet = async () => {
-    const provider = getMetaMaskProvider();
+    const provider = getSolflareProvider();
     setWalletError('');
+    setTrialMessage('');
     setIsConnecting(true);
 
     try {
       if (provider) {
-        await provider.request({
-          method: 'wallet_revokePermissions',
-          params: [{ eth_accounts: {} }],
-        });
+        await provider.disconnect();
       }
     } catch (_error) {
-      // Ignore revoke failure and still clear local state.
+      // Ignore disconnect failure and still clear local state.
     } finally {
       setWalletAddress('');
       setIsConnecting(false);
@@ -119,7 +225,7 @@ function App() {
   return (
     <div className="app">
       <header className="wallet-bar">
-        <div className="wallet-status">{walletAddress ? `Connected: ${shortAddress}` : 'Wallet not connected'}</div>
+        <div className="wallet-status">{walletAddress ? `Connected: ${walletAddress}` : 'Wallet not connected'}</div>
         <button
           className="wallet-button"
           onClick={walletAddress ? disconnectWallet : connectWallet}
@@ -129,9 +235,10 @@ function App() {
         </button>
       </header>
       {walletError && <p className="wallet-error">{walletError}</p>}
+      {trialMessage && <p className="trial-message">{trialMessage}</p>}
       {!isContractLab ? (
         <>
-          <PricingCards onStartFreeTrial={handleStartFreeTrial} />
+          <PricingCards onStartFreeTrial={handleStartFreeTrial} isTrialSubmitting={isTrialSubmitting} />
         </>
       ) : (
         <ContractLab onBack={() => navigateTo('/', {})} />

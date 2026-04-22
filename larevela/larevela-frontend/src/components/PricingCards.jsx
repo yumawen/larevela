@@ -2,7 +2,7 @@
 import React from 'react';
 import './PricingCards.css';
 
-const PricingCards = ({ onStartFreeTrial }) => {
+const PricingCards = ({ onStartFreeTrial, isTrialSubmitting = false }) => {
   const plans = [
     {
       name: "Growth",
@@ -133,8 +133,12 @@ const PricingCards = ({ onStartFreeTrial }) => {
                           <ShieldIcon />
                           No credit card required
                         </div>
-                        <button className="btn btn-outline" onClick={() => onStartFreeTrial?.(plan)}>
-                          {plan.buttonText}
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => onStartFreeTrial?.(plan)}
+                          disabled={isTrialSubmitting}
+                        >
+                          {isTrialSubmitting ? 'Processing...' : plan.buttonText}
                         </button>
                       </>
                     )}
