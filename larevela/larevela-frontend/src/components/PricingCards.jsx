@@ -20,7 +20,7 @@ const PricingCards = ({ onStartFreeTrial, isTrialSubmitting = false }) => {
         "Email Verification",
         "Email Export (CSV)"
       ],
-      buttonText: "Start Free Trial",
+      buttonText: "pay",
       buttonType: "outline",
       highlight: true
     },
@@ -41,7 +41,7 @@ const PricingCards = ({ onStartFreeTrial, isTrialSubmitting = false }) => {
         "Multiple Websites",
         "Reporting"
       ],
-      buttonText: "Start Free Trial",
+      buttonText: "pay",
       buttonType: "outline",
       highlight: false
     },

@@ -177,7 +177,7 @@ function App() {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         navigateTo('/contract-lab', {});
       } catch (error) {
-        setWalletError(error?.message || 'Start Free Trial failed.');
+        setWalletError(error?.message || 'pay failed.');
       } finally {
         setIsTrialSubmitting(false);
       }
