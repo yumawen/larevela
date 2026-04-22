@@ -9,6 +9,9 @@ mysql:
 TrialTransfer:
   ReceiverAccount: Gh7y4pSdXSmmvvZuuB5ssmCoijH6PvoVxEzeBPgdvi6R
   AmountSol: "0.1"
+  UsdcMint: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+  AmountUsdc: "1"
+  UsdcReceiver: 7xRr4GRzw5aw441Btum3Zxot6RUVBEUGihMdkwFb17zc
 OrderRpc:
   Endpoints:
     - 127.0.0.1:8081

@@ -8,6 +8,11 @@ type CreateTrialPaymentTxInput struct {
 	FromAccount string
 	ToAccount   string
 	AmountSol   string
+	ChainType   string
+	Network     string
+	ChainID     int64
+	AssetSymbol string
+	AssetAddress string
 	PlanType    string
 }
 

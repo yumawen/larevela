@@ -13,6 +13,18 @@ func (m *Model) CreateTrialPaymentTx(ctx context.Context, in CreateTrialPaymentT
 	if in.PaymentNo == "" || in.TxID == "" || in.FromAccount == "" || in.ToAccount == "" || in.AmountSol == "" {
 		return fmt.Errorf("missing required transaction fields")
 	}
+	if in.ChainType == "" {
+		in.ChainType = "solana"
+	}
+	if in.Network == "" {
+		in.Network = "devnet"
+	}
+	if in.ChainID == 0 {
+		in.ChainID = 103
+	}
+	if in.AssetSymbol == "" {
+		in.AssetSymbol = "SOL"
+	}
 
 	now := time.Now()
 	query := `
@@ -20,10 +32,15 @@ INSERT INTO payment_transactions (
   payment_no, tx_id, chain_type, network, chain_id, from_account, to_account,
   asset_address, asset_symbol, amount_actual, tx_status, confirmations,
   confirmation_status, reference_id, created_at, updated_at
-) VALUES (?, ?, 'solana', 'devnet', 103, ?, ?, '', 'SOL', ?, 'success', 1, 'confirmed', ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'success', 1, 'confirmed', ?, ?, ?)
 ON DUPLICATE KEY UPDATE
+  chain_type = VALUES(chain_type),
+  network = VALUES(network),
+  chain_id = VALUES(chain_id),
   from_account = VALUES(from_account),
   to_account = VALUES(to_account),
+  asset_address = VALUES(asset_address),
+  asset_symbol = VALUES(asset_symbol),
   amount_actual = VALUES(amount_actual),
   tx_status = VALUES(tx_status),
   confirmations = VALUES(confirmations),
@@ -32,7 +49,23 @@ ON DUPLICATE KEY UPDATE
   updated_at = VALUES(updated_at)
 `
 
-	_, err := m.conn.ExecCtx(ctx, query, in.PaymentNo, in.TxID, in.FromAccount, in.ToAccount, in.AmountSol, in.PlanType, now, now)
+	_, err := m.conn.ExecCtx(
+		ctx,
+		query,
+		in.PaymentNo,
+		in.TxID,
+		in.ChainType,
+		in.Network,
+		in.ChainID,
+		in.FromAccount,
+		in.ToAccount,
+		in.AssetAddress,
+		in.AssetSymbol,
+		in.AmountSol,
+		in.PlanType,
+		now,
+		now,
+	)
 	return err
 }
 

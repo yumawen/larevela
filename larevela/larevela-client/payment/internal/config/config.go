@@ -18,4 +18,7 @@ type Config struct {
 type TrialTransferConf struct {
 	ReceiverAccount string `json:"receiverAccount"`
 	AmountSol       string `json:"amountSol"`
+	UsdcMint        string `json:"usdcMint"`
+	AmountUsdc      string `json:"amountUsdc"`
+	UsdcReceiver    string `json:"usdcReceiver"`
 }

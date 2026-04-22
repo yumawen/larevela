@@ -61,21 +61,37 @@ func (l *SubmitTxLogic) SubmitTx(in *payment.SubmitTxReq) (*payment.SubmitTxResp
 	l.Infof("payment.SubmitTx start paymentNo=%s txId=%s from=%s", paymentNo, txID, fromAccount)
 
 	receiverAccount := strings.TrimSpace(l.svcCtx.Config.TrialTransfer.ReceiverAccount)
-	if receiverAccount == "" {
-		return nil, fmt.Errorf("trialTransfer.receiverAccount is required")
+	pi, piErr := l.svcCtx.TradeModel.GetPaymentIntent(l.ctx, paymentNo)
+	if piErr != nil {
+		logx.WithContext(l.ctx).Errorf("load payment intent before persist tx failed, paymentNo=%s err=%v", paymentNo, piErr)
+		return nil, fmt.Errorf("payment intent not found")
 	}
-	amountSol := strings.TrimSpace(l.svcCtx.Config.TrialTransfer.AmountSol)
-	if amountSol == "" {
-		amountSol = "0.1"
+	if strings.TrimSpace(pi.ReceiverAccount) != "" {
+		receiverAccount = strings.TrimSpace(pi.ReceiverAccount)
+	}
+	if receiverAccount == "" {
+		return nil, fmt.Errorf("receiverAccount is required")
+	}
+	amountExpected := strings.TrimSpace(pi.AmountExpected)
+	if amountExpected == "" {
+		amountExpected = strings.TrimSpace(l.svcCtx.Config.TrialTransfer.AmountSol)
+		if amountExpected == "" {
+			amountExpected = "0.1"
+		}
 	}
 
 	err := l.svcCtx.TradeModel.CreateTrialPaymentTx(l.ctx, trademodel.CreateTrialPaymentTxInput{
-		PaymentNo:   paymentNo,
-		TxID:        txID,
-		FromAccount: fromAccount,
-		ToAccount:   receiverAccount,
-		AmountSol:   amountSol,
-		PlanType:    "free_trial",
+		PaymentNo:    paymentNo,
+		TxID:         txID,
+		FromAccount:  fromAccount,
+		ToAccount:    receiverAccount,
+		AmountSol:    amountExpected,
+		ChainType:    pi.ChainType,
+		Network:      pi.Network,
+		ChainID:      pi.ChainID,
+		AssetSymbol:  pi.AssetSymbol,
+		AssetAddress: pi.AssetAddress,
+		PlanType:     "free_trial",
 	})
 	if err != nil {
 		logx.WithContext(l.ctx).Errorf("persist submit tx failed, paymentNo=%s txId=%s err=%v", paymentNo, txID, err)
@@ -114,10 +130,7 @@ func (l *SubmitTxLogic) SubmitTx(in *payment.SubmitTxReq) (*payment.SubmitTxResp
 		return nil, fmt.Errorf("update payment status failed")
 	}
 	l.Infof("payment.SubmitTx marked submitted paymentNo=%s", paymentNo)
-	pi, piErr := l.svcCtx.TradeModel.GetPaymentIntent(l.ctx, paymentNo)
-	if piErr != nil {
-		logx.WithContext(l.ctx).Errorf("load payment intent for payment_view failed, paymentNo=%s err=%v", paymentNo, piErr)
-	} else if viewErr := l.svcCtx.TradeModel.UpsertPaymentView(l.ctx, trademodel.UpsertPaymentViewInput{
+	if viewErr := l.svcCtx.TradeModel.UpsertPaymentView(l.ctx, trademodel.UpsertPaymentViewInput{
 		PaymentNo:          paymentNo,
 		OrderNo:            pi.OrderNo,
 		TxID:               txID,
