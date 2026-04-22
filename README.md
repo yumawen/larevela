@@ -1,6 +1,8 @@
-Chain ID ：103 #solana dev
-  Web3 wallet payment - no contract call is required - native system transfer 
-  uses the System Program (11111111111111111111111111111111)  
+Chain ID ：103 #solana devnet
+  sol : System Program (11111111111111111111111111111111)  
+  usdc/usdt :  USDC Mint (devnet default): 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+               Token Program（SPL）：TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+               Associated Token Program：ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL  #USDC ATA exists first.
 
 build front
 npm create vite@latest larevela-frontend -- --template react
