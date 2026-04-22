@@ -1,3 +1,7 @@
+Chain ID ：103 #solana dev
+  Web3 wallet payment - no contract call is required - native system transfer 
+  uses the System Program (11111111111111111111111111111111)  
+
 build front
 npm create vite@latest larevela-frontend -- --template react
 npm install
@@ -40,7 +44,7 @@ distinguishing payment, refund, and adjustment accounting actions
 serving as the basis for audit and reconciliation
 ensuring there is a clear record between “order succeeded” and “funds were booked”
 
-build client
+build client (http://localhost:8888)
 
 goctl api new trade        #api
 goctl rpc new order       
@@ -48,8 +52,50 @@ goctl rpc new payment
 goctl rpc new chain
 goctl rpc new ledger
 
-goctl rpc protoc order.proto \
-  -I . \
-  --go_out=. \
-  --go-grpc_out=. \
-  --zrpc_out=.
+
+  database build
+  docker start mysql-server
+  /home/ma/larevela/larevela/larevela-client/model/sql
+
+orders (create)  #orderNo = "order-" + time.Now().UnixNano()
+Purpose: create the business master order first; orderNo becomes the primary correlation key across the flow.
+
+payment_intents (initial insert)
+Purpose: persist a pending payment intent with amount/receiver/unsigned-tx context—defines what should be paid.
+
+idempotency_records (create_intent)
+Purpose: protect create-intent from duplicates (double-click/retries) and avoid duplicate side effects.
+
+payment_transactions
+Purpose: record submitted on-chain transaction facts (txId, etc.) as broadcast evidence.
+
+payment_intents update (submitted)
+Purpose: bind the intent to a real tx_id and advance status to submitted for confirmation flow.
+
+idempotency_records (submit_tx)
+Purpose: idempotent guard + processing snapshot for submit-tx (processing -> success/failed) for safe retry/recovery.
+
+chain_scan_cursors
+Purpose: persist chain scan progress (block/slot/tx cursor) for resume/reconciliation jobs.
+
+payment_intents confirmation update
+Purpose: write chain parse results back into payment state machine (confirming/paid/failed) as payment truth.
+
+ledger_entries (success only)
+Purpose: post accounting ledger entries for audit-grade financial traceability.
+
+orders update to paid (success only)
+Purpose: finalize business order state and trigger delivery/entitlement, completing business closure.
+
+  run a local node
+  
+  npm run dev 
+
+#(order 8081, payment 8082, chain 8083, ledger 8084; trade HTTP 8888)
+
+  go run order.go -f etc/order.yaml
+  go run payment.go -f etc/payment.yaml
+  go run chain.go -f etc/chain.yaml
+  go run ledger.go -f etc/ledger.yaml
+  go run trade.go -f etc/trade-api.yaml # last boot
+  
