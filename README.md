@@ -7,9 +7,9 @@ Chain ID ：103 #solana devnet
 build front
 npm create vite@latest larevela-frontend -- --template react
 npm install
-
+t
 build design 
-(Currently only Solana is supported, with extensibility reserved for future needs. The chain and ledger modules need to be modified) #暂时只支持solana，预留了可拓展性，需修改chain以及ledger
+(Currently only Solana is supported, with extensibility reserved for future needs. The chain and payment need to be modified) #暂时只支持solana，预留了可拓展性，需修改chain以及ledger
 
 Frontend -> trade-api -> order-rpc -> payment-rpc -> chain-rpc -> Wallet/RPC -> payment-rpc -> ledger-rpc + order-rpc -> Frontend
 下单、生成支付意图、链上支付、链上确认、记账、订单完成
@@ -77,7 +77,7 @@ Purpose: bind the intent to a real tx_id and advance status to submitted for con
 idempotency_records (submit_tx)
 Purpose: idempotent guard + processing snapshot for submit-tx (processing -> success/failed) for safe retry/recovery.
 
-chain_scan_cursors
+chain_scan
 Purpose: persist chain scan progress (block/slot/tx cursor) for resume/reconciliation jobs.
 
 payment_intents confirmation update
