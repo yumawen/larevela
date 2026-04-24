@@ -2,3 +2,16 @@
 .gobin/
 .gocache/
 .gomodcache/
+.gopath/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs & OS
+*.log
+.DS_Store
+
+# Node (if tools run at repo root)
+node_modules/
